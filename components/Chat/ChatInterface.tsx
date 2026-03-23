@@ -49,7 +49,7 @@ export function ChatInterface() {
             </span>
           </div>
         ) : (
-          <span className={styles.emptyHeader}>Select a topic to start</span>
+          <span className={styles.emptyHeader}>Start typing or pick a topic for inspiration</span>
         )}
       </div>
 
@@ -57,10 +57,10 @@ export function ChatInterface() {
         {visibleMessages.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>💬</div>
-            <p className={styles.emptyTitle}>Choose a topic to begin</p>
+            <p className={styles.emptyTitle}>Start chatting or pick a topic</p>
             <p className={styles.emptySubtitle}>
-              Select a topic from the left panel to start an interview coaching
-              session. Your coach will ask you a question to get things going.
+              You can ask anything right away, or select a topic from the left panel to get a
+              tailored starter question.
             </p>
           </div>
         ) : (
@@ -80,7 +80,7 @@ export function ChatInterface() {
         <div ref={scrollRef} className={styles.scrollAnchor} aria-hidden="true" />
       </div>
 
-      <ChatInput onSend={sendMessage} disabled={isStreaming || !activeTopicId} />
+      <ChatInput onSend={sendMessage} disabled={isStreaming} />
     </main>
   );
 }
