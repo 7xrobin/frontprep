@@ -24,7 +24,6 @@ export function useChat() {
         teachingTechniqueValue,
         personaValue,
         guardValue,
-        customPersonaPrompt,
         addMessage,
         updateMessageById,
         setStreaming,
@@ -78,7 +77,6 @@ export function useChat() {
         teachingTechniqueValue,
         personaValue,
         guardValue,
-        customPersonaPrompt,
       );
 
       const apiMessages = [

@@ -17,8 +17,6 @@ interface PromptSectionProps {
   options: PromptOption[];
   value: string;
   onChange: (v: string) => void;
-  customValue?: string;
-  onCustomChange?: (v: string) => void;
 }
 
 function PromptSection({
@@ -26,11 +24,8 @@ function PromptSection({
   options,
   value,
   onChange,
-  customValue,
-  onCustomChange,
 }: PromptSectionProps) {
   const selected = options.find((o) => o.value === value);
-  const showCustom = value === 'custom' && onCustomChange !== undefined;
 
   return (
     <div className={styles.promptRow}>
@@ -48,19 +43,8 @@ function PromptSection({
         ))}
       </select>
 
-      {selected && !showCustom && selected.description && (
+      {selected && selected.description && (
         <div className={styles.descBox}>{selected.description}</div>
-      )}
-
-      {showCustom && (
-        <textarea
-          className={styles.customTextarea}
-          value={customValue ?? ''}
-          onChange={(e) => onCustomChange?.(e.target.value)}
-          placeholder="Describe the interviewer persona…"
-          rows={3}
-          aria-label="Custom persona prompt"
-        />
       )}
     </div>
   );

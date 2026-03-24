@@ -166,7 +166,6 @@ export function composeSystemPrompt(
   teachingTechniqueValue: string,
   personaValue: string,
   guardValue: string,
-  customPersonaPrompt?: string,
 ): string {
   const technique = TECHNIQUE_OPTIONS.find((o) => o.value === techniqueValue);
   const teachingTechnique = TEACHING_TECHNIQUE_OPTIONS.find(
@@ -177,10 +176,7 @@ export function composeSystemPrompt(
 
   const techniquePrompt = technique?.systemPrompt ?? "";
   const teachingTechniquePrompt = teachingTechnique?.systemPrompt ?? "";
-  const personaPrompt =
-    personaValue === "custom" && customPersonaPrompt
-      ? customPersonaPrompt
-      : (persona?.systemPrompt ?? "");
+  const personaPrompt = persona?.systemPrompt ?? "";
   const guardPrompt = guard?.systemPrompt ?? "";
 
   const parts = [

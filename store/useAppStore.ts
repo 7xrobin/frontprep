@@ -25,7 +25,6 @@ interface AppState {
   teachingTechniqueValue: string;
   personaValue: string;
   guardValue: string;
-  customPersonaPrompt: string;
   isStreaming: boolean;
   totalTokensUsed: number;
   sessionTopicsVisited: string[];
@@ -64,7 +63,6 @@ const DEFAULT_STATE: AppState = {
   teachingTechniqueValue: 'explanatory',
   personaValue: 'friendly-mentor',
   guardValue: 'standard',
-  customPersonaPrompt: '',
   isStreaming: false,
   totalTokensUsed: 0,
   sessionTopicsVisited: [],
@@ -153,7 +151,6 @@ export const useAppStore = create<AppStore>()(
         teachingTechniqueValue: state.teachingTechniqueValue,
         personaValue: state.personaValue,
         guardValue: state.guardValue,
-        customPersonaPrompt: state.customPersonaPrompt,
         messages: state.messages,
         activeTopicId: state.activeTopicId,
         totalTokensUsed: state.totalTokensUsed,
