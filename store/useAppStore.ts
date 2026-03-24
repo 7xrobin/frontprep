@@ -22,6 +22,7 @@ interface AppState {
   topP: number;
   frequencyPenalty: number;
   techniqueValue: string;
+  teachingTechniqueValue: string;
   personaValue: string;
   guardValue: string;
   customPersonaPrompt: string;
@@ -60,6 +61,7 @@ const DEFAULT_STATE: AppState = {
   topP: 1,
   frequencyPenalty: 0,
   techniqueValue: 'socratic',
+  teachingTechniqueValue: 'explanatory',
   personaValue: 'friendly-mentor',
   guardValue: 'standard',
   customPersonaPrompt: '',
@@ -148,6 +150,7 @@ export const useAppStore = create<AppStore>()(
         topP: state.topP,
         frequencyPenalty: state.frequencyPenalty,
         techniqueValue: state.techniqueValue,
+        teachingTechniqueValue: state.teachingTechniqueValue,
         personaValue: state.personaValue,
         guardValue: state.guardValue,
         customPersonaPrompt: state.customPersonaPrompt,

@@ -131,27 +131,65 @@ export const GUARD_OPTIONS: PromptOption[] = [
   },
 ];
 
-const STATIC_FOOTER =
+export const TEACHING_TECHNIQUE_OPTIONS: PromptOption[] = [
+  {
+    value: "explanatory",
+    label: "Explanatory",
+    description:
+      "Provide thorough explanations with analogies and checkpoints so the learner always understands the why.",
+    systemPrompt:
+      "Adopt an explanatory teaching technique. Break concepts down step by step, relate them to familiar frontend scenarios, and confirm understanding before moving on.",
+  },
+  {
+    value: "interviewer",
+    label: "Interview Drill",
+    description:
+      "Stay in interviewer mode: ask probing follow-ups first, then reveal insights after the user responds.",
+    systemPrompt:
+      "Adopt an interviewer teaching technique. Lead with questions, push the learner to reason out answers, and only provide guidance after at least one probing follow-up.",
+  },
+  {
+    value: "interview-score",
+    label: "Interview Score",
+    description:
+      "Act like a rigorous interviewer who scores every answer and delivers precise feedback for improvement.",
+    systemPrompt:
+      "Adopt an interview scoring technique. After each user response, assign a score from 1-10 and provide concise feedback. Use this exact format:\nScore: <number>/10\nFeedback: <actionable critique>. Ask a new follow-up only after scoring the previous answer.",
+  },
+];
+
+const SYSTEM_DEFINITION =
   "You are FrontPrep, a frontend interview coach. Keep responses concise. Never give away answers unprompted — make the user think first.";
 
 export function composeSystemPrompt(
   techniqueValue: string,
+  teachingTechniqueValue: string,
   personaValue: string,
   guardValue: string,
   customPersonaPrompt?: string,
 ): string {
   const technique = TECHNIQUE_OPTIONS.find((o) => o.value === techniqueValue);
+  const teachingTechnique = TEACHING_TECHNIQUE_OPTIONS.find(
+    (o) => o.value === teachingTechniqueValue,
+  );
   const persona = PERSONA_OPTIONS.find((o) => o.value === personaValue);
   const guard = GUARD_OPTIONS.find((o) => o.value === guardValue);
 
   const techniquePrompt = technique?.systemPrompt ?? "";
+  const teachingTechniquePrompt = teachingTechnique?.systemPrompt ?? "";
   const personaPrompt =
     personaValue === "custom" && customPersonaPrompt
       ? customPersonaPrompt
       : (persona?.systemPrompt ?? "");
   const guardPrompt = guard?.systemPrompt ?? "";
 
-  const parts = [techniquePrompt, personaPrompt, guardPrompt, STATIC_FOOTER]
+  const parts = [
+    techniquePrompt,
+    teachingTechniquePrompt,
+    personaPrompt,
+    guardPrompt,
+    SYSTEM_DEFINITION,
+  ]
     .map((p) => p.trim())
     .filter(Boolean);
 

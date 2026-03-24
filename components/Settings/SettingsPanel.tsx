@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppStore } from '@/store/useAppStore';
-import { TECHNIQUE_OPTIONS, GUARD_OPTIONS } from '@/lib/prompts';
+import { TECHNIQUE_OPTIONS, GUARD_OPTIONS, TEACHING_TECHNIQUE_OPTIONS } from '@/lib/prompts';
 import type { ModelId, PromptOption } from '@/types';
 import styles from './SettingsPanel.module.css';
 
@@ -108,6 +108,7 @@ export function SettingsPanel() {
     topP,
     frequencyPenalty,
     techniqueValue,
+    teachingTechniqueValue,
     guardValue,
     messages,
     totalTokensUsed,
@@ -125,6 +126,17 @@ export function SettingsPanel() {
       </div>
 
       <div className={styles.scrollBody}>
+        {/* ── Teaching Technique ── */}
+        <div className={styles.section}>
+          <p className={styles.sectionTitle}>Teaching Technique</p>
+          <PromptSection
+            title=""
+            options={TEACHING_TECHNIQUE_OPTIONS}
+            value={teachingTechniqueValue}
+            onChange={(v) => updateSettings({ teachingTechniqueValue: v })}
+          />
+        </div>
+
         {/* ── Model ── */}
         <div className={styles.section}>
           <p className={styles.sectionTitle}>Model</p>

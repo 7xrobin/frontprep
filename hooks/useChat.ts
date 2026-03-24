@@ -21,6 +21,7 @@ export function useChat() {
         topP,
         frequencyPenalty,
         techniqueValue,
+        teachingTechniqueValue,
         personaValue,
         guardValue,
         customPersonaPrompt,
@@ -74,6 +75,7 @@ export function useChat() {
 
       const systemPrompt = composeSystemPrompt(
         techniqueValue,
+        teachingTechniqueValue,
         personaValue,
         guardValue,
         customPersonaPrompt,

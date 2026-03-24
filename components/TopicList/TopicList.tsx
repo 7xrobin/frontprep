@@ -17,10 +17,21 @@ const DOT_COLORS: Record<Technology, string> = {
   'Next.js': 'var(--dot-nextjs)',
 };
 
+const generateMessageId = (): string =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
 export function TopicList() {
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState<Partial<Record<Technology, boolean>>>({});
-  const { activeTopicId, setActiveTopic, resetSession } = useAppStore();
+  const {
+    activeTopicId,
+    setActiveTopic,
+    resetSession,
+    teachingTechniqueValue,
+    addMessage,
+  } = useAppStore();
   const { sendMessage } = useChat();
 
   const filtered = search.trim()
@@ -36,6 +47,16 @@ export function TopicList() {
     if (!topic) return;
     resetSession();
     setActiveTopic(topicId);
+    if (['interviewer', 'interview-score'].includes(teachingTechniqueValue)) {
+      addMessage({
+        id: generateMessageId(),
+        role: 'assistant',
+        content: topic.seedQuestion,
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
     sendMessage(topic.seedQuestion);
   };
 
