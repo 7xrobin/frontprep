@@ -15,30 +15,30 @@ const DEFAULT_MODEL_CONFIG: ModelConfig = {
   frequencyPenalty: 0,
 };
 
-const JUDGE_SYSTEM_PROMPT = `You are an impartial evaluator. You will be given a user question
-and an AI assistant's response. Evaluate the response on the
-following dimensions. For each, provide a score and a one-sentence
-justification.
+const JUDGE_SYSTEM_PROMPT = `You are an impartial evaluator assessing how well a frontend interview assistant responded to a candidate's answer.
+You will be given the original user response (the candidate) and the assistant interviewer's reply.
+Score the assistant's reply on how effectively it guides, critiques, and motivates the candidate. For each dimension, return
+a score plus a one-sentence justification.
 
 RELEVANCE (1-5)
 1 = Completely off-topic or ignores the question
 3 = Addresses the question but misses key aspects
-5 = Directly and thoroughly addresses the specific question asked
+5 = Directly addresses the candidate's answer and keeps the conversation on the chosen topic
 
 ACTIONABILITY (1-5)
 1 = Vague platitudes with no concrete steps
 3 = Some useful suggestions but lacks specificity
-5 = Provides clear, concrete steps the user can take immediately
+5 = Provides concrete, immediately usable guidance the candidate can apply
 
 COMPLETENESS (1-5)
 1 = Covers only one narrow angle
 3 = Covers some important aspects but has notable gaps
-5 = Covers the key considerations comprehensively
+5 = Fully critiques the answer, touching on accuracy, depth, and missing pieces
 
 TONE (1-5)
 1 = Dismissive, condescending, or inappropriately casual
 3 = Neutral but not particularly encouraging or engaging
-5 = Supportive, professional, and appropriately encouraging
+5 = Professional, motivating, and aligned with a constructive interviewer persona
 
 Respond in this exact format:
 RELEVANCE: <score> | <justification>

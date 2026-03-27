@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { TOPICS } from '@/lib/topics';
 import { useAppStore } from '@/store/useAppStore';
-import type { ConversationHistoryRecord, Technology } from '@/types';
+import type { ConversationHistoryRecord, JudgeResponseBody, Message, Technology } from '@/types';
 import { TopicItem } from './TopicItem';
 import styles from './TopicList.module.css';
 
@@ -26,6 +26,8 @@ export function TopicList() {
   const [viewMode, setViewMode] = useState<'topics' | 'history'>('topics');
   const [historyLoadingId, setHistoryLoadingId] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [judgeError, setJudgeError] = useState<string | null>(null);
+  const [isJudgeRunning, setJudgeRunning] = useState(false);
   const {
     activeTopicId,
     setActiveTopic,
@@ -35,6 +37,8 @@ export function TopicList() {
     historySummaries,
     historyStatus,
     fetchHistorySummaries,
+    messages,
+    upsertStatusMessage,
   } = useAppStore();
   const isHistoryView = viewMode === 'history';
 
@@ -66,6 +70,7 @@ export function TopicList() {
     if (isHistoryView) {
       setViewMode('topics');
       setHistoryError(null);
+      setJudgeError(null);
       return;
     }
     setViewMode('history');
@@ -87,6 +92,7 @@ export function TopicList() {
 
   const openHistoryConversation = async (historyId: string) => {
     setHistoryError(null);
+    setJudgeError(null);
     setHistoryLoadingId(historyId);
     try {
       const response = await fetch(`/api/history?id=${historyId}`);
@@ -105,6 +111,77 @@ export function TopicList() {
       setHistoryError('Could not open that conversation. Please try again.');
     } finally {
       setHistoryLoadingId(null);
+    }
+  };
+
+  const findLatestExchange = (): { user: Message; assistant: Message } | null => {
+    let userMessage: Message | null = null;
+    let assistantMessage: Message | null = null;
+
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const msg = messages[i];
+      if (!userMessage && msg.role === 'user') {
+        userMessage = msg;
+      } else if (userMessage && msg.role === 'assistant' && msg.content.trim()) {
+        assistantMessage = msg;
+        break;
+      }
+    }
+
+    if (userMessage && assistantMessage) {
+      return { user: userMessage, assistant: assistantMessage };
+    }
+    return null;
+  };
+
+  const runJudgeAnalysis = async () => {
+    if (isJudgeRunning) return;
+    const exchange = findLatestExchange();
+    if (!exchange) {
+      setJudgeError('Need at least one complete user ↔ assistant exchange to analyze.');
+      return;
+    }
+
+    const statusId = upsertStatusMessage('sent', 'Preparing judge analysis…');
+    setJudgeError(null);
+    setJudgeRunning(true);
+
+    try {
+      upsertStatusMessage('processing', 'Running impartial evaluation…', statusId);
+      const response = await fetch('/api/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userQuestion: exchange.user.content,
+          assistantResponse: exchange.assistant.content,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Judge API error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as JudgeResponseBody;
+      const evaluationText = data.evaluation?.trim();
+      if (!evaluationText) {
+        throw new Error('Judge did not return a result.');
+      }
+
+      const judgeMessage: Message = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: evaluationText,
+        timestamp: Date.now(),
+      };
+      addMessage(judgeMessage);
+      upsertStatusMessage(undefined, 'Judge evaluation posted to chat.', statusId);
+    } catch (error) {
+      console.error('[judge] run failed', error);
+      const message = error instanceof Error ? error.message : 'Unexpected error while running judge.';
+      setJudgeError(message);
+      upsertStatusMessage('error', 'Judge analysis failed. Please try again.', statusId);
+    } finally {
+      setJudgeRunning(false);
     }
   };
 
@@ -236,12 +313,31 @@ export function TopicList() {
             ? 'Open a previous conversation from your device.'
             : 'Pick any topic to generate an interview-style prompt.'}
         </p>
-        {historyError && <p className={styles.historyError}>{historyError}</p>}
+        {(historyError || judgeError) && (
+          <p className={styles.historyError}>{historyError ?? judgeError}</p>
+        )}
       </div>
 
       <div className={styles.list} role="region" aria-live="polite">
         {isHistoryView ? renderHistoryList() : renderTopicGroups()}
       </div>
+
+      {isHistoryView && (
+        <button
+          className={styles.judgeBtn}
+          onClick={runJudgeAnalysis}
+          disabled={isJudgeRunning}
+          title="Run impartial analysis on the latest exchange"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <path d="M12 1v22" />
+            <path d="M5 8h14l-1 2H6l-1-2Z" />
+            <path d="M6 10v7a3 3 0 0 0 6 0v-7" />
+            <path d="M12 10v7a3 3 0 0 0 6 0v-7" />
+          </svg>
+          {isJudgeRunning ? 'Analyzing…' : 'Analyze response'}
+        </button>
+      )}
     </aside>
   );
 }
