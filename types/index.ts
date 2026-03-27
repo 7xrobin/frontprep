@@ -22,6 +22,29 @@ export interface Message {
   status?: AssistantStatus;
 }
 
+export interface ConversationHistoryRecord {
+  id: string;
+  title: string;
+  topicId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  messages: Message[];
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  topicId: string | null;
+  updatedAt: number;
+  preview: string;
+}
+
+export interface HistoryUpsertRequest {
+  id: string;
+  topicId: string | null;
+  messages: Message[];
+}
+
 export interface PromptOption {
   value: string;
   label: string;

@@ -3,10 +3,14 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
   AssistantStatus,
   AvailableModel,
+  ConversationHistoryRecord,
+  ConversationSummary,
   Message,
   ModelId,
   ModelsStatus,
 } from '@/types';
+
+type HistoryStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 const generateMessageId = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -16,6 +20,7 @@ const generateMessageId = (): string =>
 interface AppState {
   messages: Message[];
   activeTopicId: string | null;
+  currentConversationId: string;
   model: ModelId;
   temperature: number;
   maxTokens: number;
@@ -30,18 +35,24 @@ interface AppState {
   sessionTopicsVisited: string[];
   availableModels: AvailableModel[];
   modelsStatus: ModelsStatus;
+  historySummaries: ConversationSummary[];
+  historyStatus: HistoryStatus;
 }
 
 interface AppActions {
   setActiveTopic: (topicId: string) => void;
   addMessage: (message: Message) => void;
   updateMessageById: (id: string, updater: (msg: Message) => Message) => void;
+  loadConversation: (record: ConversationHistoryRecord) => void;
   setStreaming: (isStreaming: boolean) => void;
   updateSettings: (settings: Partial<Omit<AppState, 'messages' | 'isStreaming' | 'sessionTopicsVisited'>>) => void;
   addTokensUsed: (tokens: number) => void;
   resetSession: () => void;
+  setCurrentConversationId: (id: string) => void;
   setAvailableModels: (models: AvailableModel[]) => void;
   setModelsStatus: (status: ModelsStatus) => void;
+  fetchHistorySummaries: () => Promise<void>;
+  upsertHistorySummary: (summary: ConversationSummary) => void;
   upsertStatusMessage: (
     status: AssistantStatus | undefined,
     content: string,
@@ -54,6 +65,7 @@ type AppStore = AppState & AppActions;
 const DEFAULT_STATE: AppState = {
   messages: [],
   activeTopicId: null,
+  currentConversationId: generateMessageId(),
   model: 'gpt-4o',
   temperature: 0.7,
   maxTokens: 1024,
@@ -68,6 +80,8 @@ const DEFAULT_STATE: AppState = {
   sessionTopicsVisited: [],
   availableModels: [],
   modelsStatus: 'idle',
+  historySummaries: [],
+  historyStatus: 'idle',
 };
 
 export const useAppStore = create<AppStore>()(
@@ -93,6 +107,19 @@ export const useAppStore = create<AppStore>()(
           messages: state.messages.map((msg) => (msg.id === id ? updater(msg) : msg)),
         })),
 
+      loadConversation: (record) =>
+        set((state) => ({
+          messages: record.messages,
+          activeTopicId: record.topicId,
+          currentConversationId: record.id,
+          isStreaming: false,
+          sessionTopicsVisited: record.topicId
+            ? state.sessionTopicsVisited.includes(record.topicId)
+              ? state.sessionTopicsVisited
+              : [...state.sessionTopicsVisited, record.topicId]
+            : state.sessionTopicsVisited,
+        })),
+
       setStreaming: (isStreaming) => set({ isStreaming }),
 
       updateSettings: (settings) => set(settings),
@@ -107,11 +134,41 @@ export const useAppStore = create<AppStore>()(
           isStreaming: false,
           totalTokensUsed: 0,
           sessionTopicsVisited: [],
+          currentConversationId: generateMessageId(),
         }),
+
+      setCurrentConversationId: (id) => set({ currentConversationId: id }),
 
       setAvailableModels: (models) => set({ availableModels: models }),
 
       setModelsStatus: (status) => set({ modelsStatus: status }),
+
+      fetchHistorySummaries: async () => {
+        set({ historyStatus: 'loading' });
+        try {
+          const response = await fetch('/api/history');
+          if (!response.ok) {
+            throw new Error(`Failed to load history: ${response.status}`);
+          }
+          const data = (await response.json()) as { histories?: ConversationSummary[] };
+          set({
+            historySummaries: data.histories ?? [],
+            historyStatus: 'ready',
+          });
+        } catch (error) {
+          console.error('[history] fetch failed', error);
+          set({ historyStatus: 'error' });
+        }
+      },
+
+      upsertHistorySummary: (summary) =>
+        set((state) => {
+          const withoutCurrent = state.historySummaries.filter((item) => item.id !== summary.id);
+          return {
+            historySummaries: [summary, ...withoutCurrent].slice(0, 100),
+            historyStatus: 'ready',
+          };
+        }),
 
       upsertStatusMessage: (status, content, existingId) => {
         const timestamp = Date.now();
@@ -153,10 +210,12 @@ export const useAppStore = create<AppStore>()(
         guardValue: state.guardValue,
         messages: state.messages,
         activeTopicId: state.activeTopicId,
+        currentConversationId: state.currentConversationId,
         totalTokensUsed: state.totalTokensUsed,
         sessionTopicsVisited: state.sessionTopicsVisited,
         availableModels: state.availableModels,
         modelsStatus: state.modelsStatus,
+        historySummaries: state.historySummaries,
       }),
     },
   ),

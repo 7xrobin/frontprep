@@ -1,10 +1,47 @@
 import { useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { composePromptLayers } from '@/lib/prompts';
-import type { AssistantStatus, Message } from '@/types';
+import type { AssistantStatus, ConversationSummary, Message } from '@/types';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+async function persistConversationHistory() {
+  const {
+    currentConversationId,
+    activeTopicId,
+    messages,
+    upsertHistorySummary,
+  } = useAppStore.getState();
+
+  const meaningfulMessages = messages.filter((msg) => msg.role !== 'status');
+  if (!currentConversationId || meaningfulMessages.length === 0) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: currentConversationId,
+        topicId: activeTopicId ?? null,
+        messages: meaningfulMessages,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to store history: ${response.status}`);
+    }
+
+    const data = (await response.json()) as { summary?: ConversationSummary };
+    if (data.summary) {
+      upsertHistorySummary(data.summary);
+    }
+  } catch (error) {
+    console.error('[history] persist failed', error);
+  }
 }
 
 export function useChat() {
@@ -144,6 +181,7 @@ export function useChat() {
         console.error('[assistant-status] error', errorMessage);
       } finally {
         setStreaming(false);
+        await persistConversationHistory();
       }
     },
     [],
