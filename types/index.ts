@@ -49,7 +49,7 @@ export interface PromptOption {
   value: string;
   label: string;
   description: string;
-  systemPrompt: string;
+  assistantPrompt: string;
 }
 
 export type ModelId = string;
