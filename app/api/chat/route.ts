@@ -46,7 +46,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const body = (await req.json()) as ChatRequestBody;
-  const { messages, modelConfig, systemPrompt } = body;
+  const { messages, modelConfig, systemPrompt, assistantPreface } = body;
   const { model, temperature, maxTokens, topP, frequencyPenalty } = modelConfig;
 
   console.log('[assistant-status][server] sent', {
@@ -66,6 +66,9 @@ export async function POST(req: Request): Promise<Response> {
           stream: true,
           messages: [
             { role: 'system', content: systemPrompt },
+            ...(assistantPreface
+              ? [{ role: 'assistant', content: assistantPreface }]
+              : []),
             ...messages.map((m) => ({
               role: m.role as 'user' | 'assistant',
               content: m.content,

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { composeSystemPrompt } from '@/lib/prompts';
+import { composePromptLayers } from '@/lib/prompts';
 import type { AssistantStatus, Message } from '@/types';
 
 function generateId(): string {
@@ -72,7 +72,7 @@ export function useChat() {
       setStreaming(true);
       setAssistantStatus('processing', 'Assistant is processing your request…');
 
-      const systemPrompt = composeSystemPrompt(
+      const { systemPrompt, assistantPreface } = composePromptLayers(
         techniqueValue,
         teachingTechniqueValue,
         personaValue,
@@ -98,6 +98,7 @@ export function useChat() {
               frequencyPenalty,
             },
             systemPrompt,
+            assistantPreface,
           }),
         });
 
@@ -127,7 +128,13 @@ export function useChat() {
         }
 
         const estimatedTokens = Math.ceil(
-          (systemPrompt.length + accumulated.length + userContent.length) / 4,
+          (
+            systemPrompt.length +
+            assistantPreface.length +
+            accumulated.length +
+            userContent.length
+          ) /
+            4,
         );
         addTokensUsed(estimatedTokens);
       } catch (err) {

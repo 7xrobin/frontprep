@@ -50,6 +50,7 @@ export interface ChatRequestBody {
   messages: Pick<Message, 'role' | 'content'>[];
   modelConfig: ModelConfig;
   systemPrompt: string;
+  assistantPreface: string;
 }
 
 export interface SessionStats {

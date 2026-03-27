@@ -169,12 +169,17 @@ export const TEACHING_TECHNIQUE_OPTIONS: PromptOption[] = [
 const SYSTEM_DEFINITION =
   "You are FrontPrep, a frontend interview coach. Keep responses concise. Never give away answers unprompted — make the user think first.";
 
-export function composeSystemPrompt(
+export interface PromptLayers {
+  systemPrompt: string;
+  assistantPreface: string;
+}
+
+export function composePromptLayers(
   techniqueValue: string,
   teachingTechniqueValue: string,
   personaValue: string,
   guardValue: string,
-): string {
+): PromptLayers {
   const technique = TECHNIQUE_OPTIONS.find((o) => o.value === techniqueValue);
   const teachingTechnique = TEACHING_TECHNIQUE_OPTIONS.find(
     (o) => o.value === teachingTechniqueValue,
@@ -187,15 +192,19 @@ export function composeSystemPrompt(
   const personaPrompt = persona?.systemPrompt ?? "";
   const guardPrompt = guard?.systemPrompt ?? "";
 
-  const parts = [
+  const systemPrompt = [guardPrompt, SYSTEM_DEFINITION]
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .join("\n\n");
+
+  const assistantPreface = [
     techniquePrompt,
     teachingTechniquePrompt,
     personaPrompt,
-    guardPrompt,
-    SYSTEM_DEFINITION,
   ]
     .map((p) => p.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .join("\n\n");
 
-  return parts.join("\n\n");
+  return { systemPrompt, assistantPreface };
 }
