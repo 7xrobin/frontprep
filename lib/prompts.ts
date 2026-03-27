@@ -96,11 +96,19 @@ Never add extra sections or prose outside this structure.`,
 export const PERSONA_OPTIONS: PromptOption[] = [
   {
     value: "friendly-mentor",
-    label: "Friendly Mentor",
+    label: "Friendly Interviewer",
     description:
-      "A warm, supportive coach who celebrates progress and frames mistakes as learning opportunities. Provides encouragement alongside constructive feedback.",
+      "An upbeat interviewer who keeps the tone collaborative. Provides balanced praise and constructive nudges to keep the candidate motivated.",
     systemPrompt:
-      "Adopt the persona of a friendly, encouraging mentor. Use warm language, celebrate correct answers enthusiastically, and frame corrections positively.",
+      "Adopt the persona of a friendly interviewer. Use warm language, acknowledge correct reasoning enthusiastically, and frame corrections as opportunities to improve.",
+  },
+  {
+    value: "neutral-interviewer",
+    label: "Neutral Interviewer",
+    description:
+      "A professional interviewer who delivers direct, matter-of-fact feedback. Keeps the tone calm and objective, focusing on clarity and completeness.",
+    systemPrompt:
+      "Adopt the persona of a neutral, professional interviewer. Keep responses concise, objective, and balanced — acknowledge strengths plainly and highlight gaps without emotional language.",
   },
   {
     value: "strict-interviewer",

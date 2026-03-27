@@ -1,7 +1,12 @@
 'use client';
 
 import { useAppStore } from '@/store/useAppStore';
-import { TECHNIQUE_OPTIONS, GUARD_OPTIONS, TEACHING_TECHNIQUE_OPTIONS } from '@/lib/prompts';
+import {
+  TECHNIQUE_OPTIONS,
+  GUARD_OPTIONS,
+  TEACHING_TECHNIQUE_OPTIONS,
+  PERSONA_OPTIONS,
+} from '@/lib/prompts';
 import type { ModelId, PromptOption } from '@/types';
 import styles from './SettingsPanel.module.css';
 
@@ -93,6 +98,7 @@ export function SettingsPanel() {
     frequencyPenalty,
     techniqueValue,
     teachingTechniqueValue,
+    personaValue,
     guardValue,
     messages,
     totalTokensUsed,
@@ -118,6 +124,17 @@ export function SettingsPanel() {
             options={TEACHING_TECHNIQUE_OPTIONS}
             value={teachingTechniqueValue}
             onChange={(v) => updateSettings({ teachingTechniqueValue: v })}
+          />
+        </div>
+
+        {/* ── Persona ── */}
+        <div className={styles.section}>
+          <p className={styles.sectionTitle}>Persona</p>
+          <PromptSection
+            title=""
+            options={PERSONA_OPTIONS}
+            value={personaValue}
+            onChange={(v) => updateSettings({ personaValue: v })}
           />
         </div>
 
