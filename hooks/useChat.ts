@@ -58,7 +58,6 @@ export function useChat() {
         topP,
         frequencyPenalty,
         techniqueValue,
-        teachingTechniqueValue,
         personaValue,
         guardValue,
         addMessage,
@@ -111,7 +110,6 @@ export function useChat() {
 
       const { systemPrompt, assistantPreface } = composePromptLayers(
         techniqueValue,
-        teachingTechniqueValue,
         personaValue,
         guardValue,
       );

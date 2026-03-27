@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import { TOPICS } from '@/lib/topics';
 import { useAppStore } from '@/store/useAppStore';
-import type { ConversationHistoryRecord } from '@/types';
-import type { Technology } from '@/types';
-import { useChat } from '@/hooks/useChat';
+import type { ConversationHistoryRecord, Technology } from '@/types';
 import { TopicItem } from './TopicItem';
 import styles from './TopicList.module.css';
 
@@ -32,14 +30,12 @@ export function TopicList() {
     activeTopicId,
     setActiveTopic,
     resetSession,
-    teachingTechniqueValue,
     addMessage,
     loadConversation,
     historySummaries,
     historyStatus,
     fetchHistorySummaries,
   } = useAppStore();
-  const { sendMessage } = useChat();
   const isHistoryView = viewMode === 'history';
 
   useEffect(() => {
@@ -54,17 +50,12 @@ export function TopicList() {
     if (!topic) return;
     resetSession();
     setActiveTopic(topicId);
-    if (['interviewer', 'interview-score'].includes(teachingTechniqueValue)) {
-      addMessage({
-        id: generateMessageId(),
-        role: 'assistant',
-        content: topic.seedQuestion,
-        timestamp: Date.now(),
-      });
-      return;
-    }
-
-    sendMessage(topic.seedQuestion);
+    addMessage({
+      id: generateMessageId(),
+      role: 'assistant',
+      content: topic.seedQuestion,
+      timestamp: Date.now(),
+    });
   };
 
   const toggleGroup = (tech: Technology) => {

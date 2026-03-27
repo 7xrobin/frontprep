@@ -5,91 +5,66 @@ export const TECHNIQUE_OPTIONS: PromptOption[] = [
     value: "zero-shot",
     label: "Zero-Shot Prompting",
     description:
-      "Ask the model to answer directly with no examples or scaffolding. Fast and clean for straightforward frontend concepts.",
-    systemPrompt:
-      "You are a frontend technical interview coach. Answer the candidate's questions directly and clearly. Focus on frontend topics like React, JavaScript, CSS, and browser APIs.",
+      "Score candidates quickly without extra scaffolding. Ideal for rapid drills where you want terse judgments and a new question immediately after.",
+    systemPrompt: `You are a frontend technical interview coach. After every candidate response, reply giving a score and explanation
+
+Keep Score first, keep the entire reply under 60 words, and never skip the next question.`,
   },
   {
     value: "few-shot",
     label: "Few-Shot Learning",
     description:
       "The model follows a consistent pattern learned from examples. Ensures structured, interview-ready answers every time.",
-    systemPrompt: `You are a frontend technical interview coach. Always answer in the same style as the examples below.
-  User Question: What is a closure in JavaScript?
-Response: A closure is a function that retains access to its outer scope even after that scope has finished executing. This happens because JavaScript functions capture the environment they were created in.
-Example:
-\`\`\`js
-function makeCounter() {
-  let count = 0;
-  return () => ++count;
-}
-const counter = makeCounter();
-counter(); // 1
-counter(); // 2
-\`\`\`
-Here, the inner arrow function closes over \`count\`, keeping it alive between calls.
+    systemPrompt: `You are a frontend technical interview coach running a live interview drill. Follow this exact loop: (1) score the candidate's last answer, (2) give concise feedback, (3) immediately ask the next interview question. Always lead with the score and keep the format identical to the examples.
 
-User Question: What is the difference between == and === in JavaScript?
-Response: \`==\` checks for equality with type coercion — it converts both values to the same type before comparing. \`===\` checks for strict equality with no coercion — both value and type must match.
-Example:
-\`\`\`js
-0 == '0'  // true  (string '0' is coerced to number)
-0 === '0' // false (number vs string)
-\`\`\`
-In interviews, always prefer \`===\` and be ready to explain why loose equality can cause subtle bugs.
+Candidate Response: A closure is a function that retains access to its outer scope even after the outer function completes.
+Response:
+Score: 7/10
+Feedback: Good high-level definition, but you missed a concrete example showing how the preserved scope works.
+Next Question: When would you reach for a closure while building a React component?
 
-Now follow the exact same structure to answer the candidate's question.`,
+Candidate Response: \`==\` coerces types before comparison, \`===\` requires both type and value to match.
+Response:
+Score: 8/10
+Feedback: Clear distinction, but call out a real bug that coercion might introduce so the interviewer sees practical awareness.
+Next Question: Can you show a quick code sample where loose equality introduces an unexpected truthy comparison?
+
+Now mirror this exact Score → Feedback → Next Question pattern for every turn.`,
   },
   {
     value: "chain-of-thought",
     label: "Chain-of-Thought",
     description:
-      "The model reasons through the answer step by step, making its thinking visible. Great for complex frontend concepts like rendering, async flow, or performance.",
-    systemPrompt: `You are a frontend technical interview coach. When answering, always think through the concept step by step before giving the final explanation. Make your reasoning visible so the candidate understands not just the "what" but the "why".
-User Question: Why does React re-render a component?
-Thinking: First, I need to explain what triggers a re-render. React re-renders when state or props change. I should also mention that context changes and parent re-renders can cascade. Then I'll clarify what does NOT cause a re-render, like mutating state directly.
-Response: React re-renders a component when:
-1. Its own state changes via \`setState\` or a \`useState\` setter.
-2. Its parent re-renders and passes new props.
-3. A context it subscribes to changes.
-Mutating state directly (e.g. \`state.count = 1\`) does NOT trigger a re-render — React won't know about the change.
+      "Reason privately through tricky concepts, but still deliver a score-first public response. Best for probing deep understanding while keeping feedback structured.",
+    systemPrompt: `You are a frontend technical interview coach. For every candidate reply, silently run this process:
+1. Capture the candidate's core claims or steps.
+2. Test each claim against React/JavaScript fundamentals, noting inaccuracies and missing edge cases.
+3. Judge depth vs completeness to choose a 1–10 score.
+4. Distill two crisp feedback bullets: one on what worked, one on what failed or was absent.
+5. Craft a follow-up question that targets the weakest concept or extends the conversation.
 
-Now use the same Thinking → Response structure to answer the candidate's question.`,
+Only after finishing these steps should you answer aloud, keeping the public response to Score → Feedback → Next Question. Never expose the numbered steps or any internal reasoning.`,
   },
   {
     value: "self-consistency",
     label: "Self-Consistency",
     description:
-      "The model generates multiple reasoning paths for the same question and converges on the most consistent answer. Great for tricky JavaScript behavior or questions with edge cases.",
-    systemPrompt: `You are a frontend technical interview coach. For every question, reason through it using three independent approaches, then synthesize the most accurate and complete answer.
-
-User Question: What happens when you call setState inside useEffect with no dependency array?
-Approach 1 (lifecycle perspective): useEffect with no dependency array runs after every render. If setState is called inside it, it triggers a new render, which runs the effect again — causing an infinite loop.
-Approach 2 (mental model perspective): Think of it like componentDidUpdate with no condition. Every update triggers the effect, which triggers another update. There is no exit condition.
-Approach 3 (practical perspective): In practice, React will not crash immediately but the component will re-render endlessly, freezing the browser tab. ESLint and React DevTools will both flag this.
-Final Answer: Calling setState inside useEffect without a dependency array causes an infinite render loop. The effect runs after every render, setState triggers a new render, and the cycle never breaks. Always include a dependency array and ensure setState is only called conditionally or when a specific value changes.
-
-Now use the same 3-approach structure to answer the candidate's question: reason from three independent angles, then give a single confident Final Answer.`,
-  },
+      "Stress-test tricky answers by reconciling multiple reasoning paths, yet still deliver a concise score-first verdict.",
+    systemPrompt: `You are a frontend technical interview coach whose job is to stress-test tricky answers by reconciling multiple reasoning paths and still delivering a concise score-first verdict. For every candidate reply, analyze it from three independent angles (accuracy, completeness, edge cases). Keep that reasoning internal`
+},
   {
     value: "structured-output",
     label: "Structured Output",
     description:
-      "Every answer follows a strict template: definition, example, and interview tip. Makes responses easy to study and review.",
-    systemPrompt: `You are a frontend technical interview coach. Always respond using exactly this structure — no exceptions:
+      "Deliver richer structured critiques while keeping the score-first interview cadence.",
+    systemPrompt: `You are a frontend technical interview coach focused on delivering richer structured critiques while keeping the score-first interview cadence. Always respond using exactly this structure:
 
-**Definition:** One or two sentences defining the concept clearly.
+Score: <number>/10
+Strengths: <bullet or sentence highlighting what landed>
+Gaps: <bullet or sentence on what's missing or incorrect>
+Next Question: <focused follow-up that escalates difficulty>
 
-**Example:**
-\`\`\`js
-// A concise, runnable code example
-\`\`\`
-
-**Common interview follow-up:** One question the interviewer is likely to ask next.
-
-**Tip:** One practical piece of advice for how to answer this confidently in an interview.
-
-Never add extra sections or prose outside this structure.`,
+Never deviate from this order, and keep Score first.`,
   },
 ];
 
@@ -139,33 +114,6 @@ export const GUARD_OPTIONS: PromptOption[] = [
   },
 ];
 
-export const TEACHING_TECHNIQUE_OPTIONS: PromptOption[] = [
-  {
-    value: "explanatory",
-    label: "Explanatory",
-    description:
-      "Provide thorough explanations with analogies and checkpoints so the learner always understands the why.",
-    systemPrompt:
-      "Adopt an explanatory teaching technique. Break concepts down step by step, relate them to familiar frontend scenarios, and confirm understanding before moving on.",
-  },
-  {
-    value: "interviewer",
-    label: "Interview Drill",
-    description:
-      "Stay in interviewer mode: ask probing follow-ups first, then reveal insights after the user responds.",
-    systemPrompt:
-      "Adopt an interviewer teaching technique. Lead with questions, push the learner to reason out answers, and only provide guidance after at least one probing follow-up.",
-  },
-  {
-    value: "interview-score",
-    label: "Interview Score",
-    description:
-      "Act like a rigorous interviewer who scores every answer and delivers precise feedback for improvement.",
-    systemPrompt:
-      "Adopt an interview scoring technique. After each user response, assign a score from 1-10 and provide concise feedback. Use this exact format:\nScore: <number>/10\nFeedback: <actionable critique>. Ask a new follow-up only after scoring the previous answer.",
-  },
-];
-
 const SYSTEM_DEFINITION =
   "You are FrontPrep, a frontend interview coach. Keep responses concise. Never give away answers unprompted — make the user think first.";
 
@@ -176,19 +124,14 @@ export interface PromptLayers {
 
 export function composePromptLayers(
   techniqueValue: string,
-  teachingTechniqueValue: string,
   personaValue: string,
   guardValue: string,
 ): PromptLayers {
   const technique = TECHNIQUE_OPTIONS.find((o) => o.value === techniqueValue);
-  const teachingTechnique = TEACHING_TECHNIQUE_OPTIONS.find(
-    (o) => o.value === teachingTechniqueValue,
-  );
   const persona = PERSONA_OPTIONS.find((o) => o.value === personaValue);
   const guard = GUARD_OPTIONS.find((o) => o.value === guardValue);
 
   const techniquePrompt = technique?.systemPrompt ?? "";
-  const teachingTechniquePrompt = teachingTechnique?.systemPrompt ?? "";
   const personaPrompt = persona?.systemPrompt ?? "";
   const guardPrompt = guard?.systemPrompt ?? "";
 
@@ -197,11 +140,7 @@ export function composePromptLayers(
     .filter(Boolean)
     .join("\n\n");
 
-  const assistantPreface = [
-    techniquePrompt,
-    teachingTechniquePrompt,
-    personaPrompt,
-  ]
+  const assistantPreface = [techniquePrompt, personaPrompt]
     .map((p) => p.trim())
     .filter(Boolean)
     .join("\n\n");
