@@ -1,7 +1,13 @@
 import { useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { composePromptLayers } from '@/lib/prompts';
-import type { AssistantStatus, ConversationSummary, Message } from '@/types';
+import type {
+  AssistantStatus,
+  ChatRequestMessage,
+  ChatRequestMessageRole,
+  ConversationSummary,
+  Message,
+} from '@/types';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -68,7 +74,7 @@ export function useChat() {
 
       if (streaming || !userContent.trim()) return;
 
-      const userMessage: Message = {
+      const userMessage: Message & { role: ChatRequestMessageRole } = {
         id: generateId(),
         role: 'user',
         content: userContent.trim(),
@@ -114,10 +120,21 @@ export function useChat() {
         guardValue,
       );
 
-      const apiMessages = [
-        ...messages.filter((m) => m.role === 'user' || m.role === 'assistant'),
-        userMessage,
-      ].map(({ role, content }) => ({ role, content }));
+      const isChatRequestMessage = (
+        msg: Message,
+      ): msg is Message & { role: ChatRequestMessageRole } =>
+        msg.role === 'user' || msg.role === 'assistant';
+
+      const toChatRequestMessage = ({
+        role,
+        content,
+      }: Message & { role: ChatRequestMessageRole }): ChatRequestMessage => ({ role, content });
+
+      const existingChatMessages = messages.filter(isChatRequestMessage);
+      const apiMessages: ChatRequestMessage[] = [
+        ...existingChatMessages.map(toChatRequestMessage),
+        toChatRequestMessage(userMessage),
+      ];
 
       try {
         const response = await fetch('/api/chat', {

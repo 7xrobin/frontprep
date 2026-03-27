@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
-import type { ChatRequestBody } from '@/types';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import type { ChatRequestBody, ChatRequestMessage } from '@/types';
 
 export const runtime = 'edge';
 
@@ -57,6 +58,27 @@ export async function POST(req: Request): Promise<Response> {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
+        const systemMessage: ChatCompletionMessageParam = {
+          role: 'system',
+          content: systemPrompt,
+        } as const;
+
+        const assistantPrefaceMessage: ChatCompletionMessageParam[] = assistantPreface
+          ? [{ role: 'assistant', content: assistantPreface } as const]
+          : [];
+
+        const chatMessages = messages.map<ChatCompletionMessageParam>(({ role, content }: ChatRequestMessage) =>
+          role === 'user'
+            ? ({ role: 'user', content } as const)
+            : ({ role: 'assistant', content } as const),
+        );
+
+        const messagePayload: ChatCompletionMessageParam[] = [
+          systemMessage,
+          ...assistantPrefaceMessage,
+          ...chatMessages,
+        ];
+
         const completion = await openai.chat.completions.create({
           model,
           temperature,
@@ -64,16 +86,7 @@ export async function POST(req: Request): Promise<Response> {
           top_p: topP,
           frequency_penalty: frequencyPenalty,
           stream: true,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...(assistantPreface
-              ? [{ role: 'assistant', content: assistantPreface }]
-              : []),
-            ...messages.map((m) => ({
-              role: m.role as 'user' | 'assistant',
-              content: m.content,
-            })),
-          ],
+          messages: messagePayload,
         });
 
         console.log('[assistant-status][server] processing', { model });

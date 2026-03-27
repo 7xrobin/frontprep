@@ -22,6 +22,13 @@ export interface Message {
   status?: AssistantStatus;
 }
 
+export type ChatRequestMessageRole = 'user' | 'assistant';
+
+export interface ChatRequestMessage {
+  role: ChatRequestMessageRole;
+  content: string;
+}
+
 export interface ConversationHistoryRecord {
   id: string;
   title: string;
@@ -70,10 +77,20 @@ export interface ModelConfig {
 }
 
 export interface ChatRequestBody {
-  messages: Pick<Message, 'role' | 'content'>[];
+  messages: ChatRequestMessage[];
   modelConfig: ModelConfig;
   systemPrompt: string;
   assistantPreface: string;
+}
+
+export interface JudgeRequestBody {
+  userQuestion: string;
+  assistantResponse: string;
+  modelConfig?: Partial<ModelConfig>;
+}
+
+export interface JudgeResponseBody {
+  evaluation: string;
 }
 
 export interface SessionStats {
